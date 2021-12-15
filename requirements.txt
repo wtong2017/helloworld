@@ -1,4 +1,4 @@
+cryptography==2.8
 selenium
 beautifulsoup4
 webdriver_manager
-pandas

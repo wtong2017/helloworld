@@ -10,11 +10,26 @@ from selenium.webdriver.support.expected_conditions import presence_of_element_l
 
 from selenium.webdriver.chrome.options import Options
 
-import pandas as pd
 import time
 from bs4 import BeautifulSoup
 
-targets = pd.read_csv("./helloworld/data.csv")
+import urllib.request
+import glob
+import os
+
+import csv
+targets = []
+with open('./helloworld/data.csv', newline='') as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        targets.append(row)
+# print(targets)
+
+crawled = [int(os.path.basename(f).split(".")[0]) for f in glob.glob("./video/*.mp4")]
+
+starting_index = max(crawled)+1
+
+print(f'Start crawling from {starting_index}')
 
 
 chrome_options = Options()
@@ -26,16 +41,17 @@ chrome_options = Options()
 # chrome_options.add_experimental_option('w3c', True)
 
 #This example requires Selenium WebDriver 3.13 or newer
-
 with webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options) as driver:
-    for name, item in targets.iterrows():
+    for index, item in enumerate(targets):
         print(item)
+        if (index < starting_index):
+            print("done")
+            continue
         time.sleep(3)
-        driver.get(item.link)
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        print(soup.prettify())
+        driver.get(item["link"])
+        # soup = BeautifulSoup(driver.page_source, 'html.parser')
+        # print(soup.prettify())
         wait = WebDriverWait(driver, 10)
         # driver.find_element(By.NAME, "q").send_keys("cheese" + Keys.RETURN)
         first_result = wait.until(presence_of_element_located((By.CSS_SELECTOR, "video source")))
-        print(first_result.get_attribute("src"))
-        break
+        urllib.request.urlretrieve(first_result.get_attribute("src"), f'./video/{index}.mp4')
